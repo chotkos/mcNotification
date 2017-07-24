@@ -77,29 +77,32 @@ var mcNotification = {
         mcNotification.createCookie(name, "", -1);
     }
     , run: function (refreshTime, siteUrl, logo) {
-        ExecuteOrDelayUntilScriptLoaded(function () {
-            var clientContext = new SP.ClientContext(siteUrl);
-            setInterval(function () {
-                for (var i = 0; i < mcNotification.observedLists.length; i++) {
-                    var item = mcNotification.observedLists[i];
-                    var oList = clientContext.get_web().get_lists().getByTitle(item.listName);
-                    var x = clientContext.load(oList);
-                    clientContext.executeQueryAsync(function () {
-                        var lastmodified = oList.get_lastItemModifiedDate();
-                        item.lastDate = new Date(mcNotification.readCookie(item.listName));
-                        if (lastmodified > item.lastDate) {
-                            item.lastDate = lastmodified;
-                            mcNotification.eraseCookie(item.listName);
-                            mcNotification.createCookie(item.listName, item.lastDate, 3);
-                            mcNotification.sendNotification(item.textInfo, item.linkUrl, logo);
-                        }
-                    }, function (sender, args) {
-                        console.log('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
-                    });
-                }
-            }, refreshTime);
-        }, "sp.js")
+        var clientContext = new SP.ClientContext(siteUrl);
+        setInterval(function () {
+            for (var i = 0; i < mcNotification.observedLists.length; i++) {
+                let item = mcNotification.observedLists[i];
+                let oList = clientContext.get_web().get_lists().getByTitle(item.listName);
+                let x = clientContext.load(oList);
+                clientContext.executeQueryAsync(function () {
+                    let lastmodified = oList.get_lastItemModifiedDate();
+                    item.lastDate = new Date(mcNotification.readCookie(item.listName));
+                    if (lastmodified > item.lastDate) {
+                        item.lastDate = lastmodified;
+                        mcNotification.eraseCookie(item.listName);
+                        mcNotification.createCookie(item.listName, item.lastDate, 3);
+                        mcNotification.sendNotification(item.textInfo, item.linkUrl, logo);
+                    }
+                }, function (sender, args) {
+                    console.log('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+                });
+            }
+        }, refreshTime);
     }
 };
-mcNotification.registerList('Lista aktualności', "http://sp-matcho/SitePages/NewsArchive.aspx", "Zmiany w aktualnościach!");
-mcNotification.run(1000, '/', "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Coat_of_arms_of_Poland-official3.png/800px-Coat_of_arms_of_Poland-official3.png")
+mcNotification.registerList('Lista aktualności', "http://sp-matcho/SitePages/NewsArchive.aspx", "Intranet - dodano nową aktualność");
+mcNotification.registerList('Menu', "http://sp-matcho/Lists/Menu", "Intranet - dodano nowy wpis w menu obiadowym");
+mcNotification.registerList('Galeria', "http://sp-matcho/SitePages/Galeria.aspx", "Intranet - dodano nowy element w galerii");
+mcNotification.registerList('Dokumenty', "http://sp-matcho/Shared%20Documents/Forms/AllItems.aspx", "Intranet - dodano nowy element w dokumentach");
+setTimeout(function () {
+    mcNotification.run(1000, '/', "http://sp-matcho/_layouts/15/HURO._Client_.MasterData/Images/notificationlogo.png")
+}, 2000)
